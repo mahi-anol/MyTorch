@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minitorch"
+version = "0.1.0"
+description = "A mini PyTorch-like framework"
+authors = [{name = "Mahi", email = "anol.mahi@gmail.com"}]
+dependencies = []
+
+[tool.setuptools]
+packages = ["minitorch"]
