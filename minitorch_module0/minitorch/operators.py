@@ -8,7 +8,7 @@ def mul(x:float,y:float)->float:
 def id(x:float)->float:
     """ Identify function - returns input unchanged """
     identity_constant=1.0
-    return identity_constant*id
+    return identity_constant*x
 
 def add(x:float,y:float)->float:
     """ Add two numbers """
@@ -83,3 +83,16 @@ def relu_back(x:float,grad:float)->float:
     """
 
     return grad if x>0 else 0.0
+
+
+#Higher order functions
+def map(fn:Callable[[float],float])->Callable[[Iterable[float]],Iterable[float]]:
+    """
+    Higher-order map function.
+    Returns a function that applies fn to each element.
+    """
+    def mapped(ls: Iterable[float])->Iterable[float]:
+        return [fn(x) for x in ls]
+    return mapped
+
+
