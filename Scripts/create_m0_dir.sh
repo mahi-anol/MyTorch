@@ -1,7 +1,7 @@
 #!/bin/bash
 
-module0_dir="minitorch-module0"
-sub_dirs=("minitorch" "tests" "project")
+module0_dir="."
+sub_dirs=("MyTorch" "tests" "project")
 
 minitorch_module_files=("__init__.py" "operators.py" "module.py" "testing.py" "datasets.py")
 test_files=("conftest.py" "test_operators.py" "test_module.py")
