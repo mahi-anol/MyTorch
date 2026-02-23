@@ -93,6 +93,45 @@ def map(fn:Callable[[float],float])->Callable[[Iterable[float]],Iterable[float]]
     """
     def mapped(ls: Iterable[float])->Iterable[float]:
         return [fn(x) for x in ls]
+    
     return mapped
 
 
+def zipWith(fn:Callable[[float,float],float])-> Callable[[Iterable[float],Iterable[float]],Iterable[float]]:
+    """Higher-order zipWith function
+        Returns a function that combines two iterables element-wise.
+    """
+    def zipped(ls1:Iterable[float],ls2:Iterable[float])->Iterable[float]:
+        return [fn(x,y) for x,y in zip(ls1,ls2)]
+    
+    return zipped
+
+def reduce(fn:Callable[[float,float],float],init:float)->Callable[[Iterable[float]],float]:
+    """
+    Higher-order reduce function.
+    Returns a function that reduces an iterablw to  a single value.
+    """
+    def reduced(ls:Iterable[float])->float:
+        result=init
+        for x in ls:
+            result=fn(result,x)
+
+        return result
+    
+    return reduced
+
+def negList(ls:Iterable[float])->Iterable[float]:
+    """negate all elements in a list using map"""
+    return map(neg)(ls)
+
+def addLists(ls1:Iterable[float],ls2:Iterable[float])->Iterable[float]:
+    """Add corresponding elements from two lists using zipWith."""
+    return zipWith(add)(ls1,ls2)
+
+def sum(ls:Iterable[float])->float:
+    """Sum all elements in a list using reduce."""
+    return reduce(add,0)(ls)
+
+def prod(ls:Iterable[float])->float:
+    """Calculate the product of all elements using reduce."""
+    return reduce(mul,1)(ls)

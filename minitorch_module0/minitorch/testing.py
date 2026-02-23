@@ -20,3 +20,4 @@ print(f"sigmoid(5) = {sigmoid(5)}")
 
 # # Test with extreme values
 # print(naive_sigmoid(-1000))  # What happens?
+result = sum(map(relu)([-1, 2, -3, 4]))
