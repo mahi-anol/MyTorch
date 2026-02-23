@@ -1,4 +1,4 @@
-from minitorch_module0.minitorch.operators import sigmoid,relu
+from MyTorch.operators import sigmoid,relu
 import math
 
 """ Testing utilities for MiniTorch """
