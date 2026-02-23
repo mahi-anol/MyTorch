@@ -1,4 +1,4 @@
-from MyTorch.operators import sigmoid,relu
+from MyTorch.operators import *
 import math
 
 """ Testing utilities for MiniTorch """
@@ -21,3 +21,48 @@ print(f"sigmoid(5) = {sigmoid(5)}")
 # # Test with extreme values
 # print(naive_sigmoid(-1000))  # What happens?
 result = sum(map(relu)([-1, 2, -3, 4]))
+print("sum(map(relu)([-1, 2, -3, 4])) = ",result)
+
+def dot(a,b):
+    return reduce(add,0)(zipWith(mul)(a,b))
+
+print("Dot Operation Output: ",dot([1,2,3],[4,5,6]))
+
+
+
+def mean(ls: Iterable[float]) -> float:
+    """Calculate the mean of a list."""
+    return sum(ls)/len(ls)
+
+
+from MyTorch.module import Module,Parameter
+
+class Network(Module):
+    def __init__(self):
+        super().__init__()
+        self.layer1=Module()
+        self.layer1.weight=Parameter([[1,2],[3,4]])
+        self.layer1.bias=Parameter([0.1,0.2])
+        self.layer2=Module()
+        self.layer2.weight=Parameter([[0.5]])
+
+
+net=Network()
+for name,_ in net.named_parameters():
+    print(name)
+
+print(net._parameters)
+
+
+from MyTorch.datasets import simple
+
+def simple_classifier(x: float, y: float) -> int:
+    """Manual classifier for simple dataset."""
+    return 1 if x >= 0.6 else 0 #0.5 gives 100% accuracy
+
+# Test accuracy
+X, y_true = simple(1000)
+correct = sum(1 for (x, y), label in zip(X, y_true)
+              if simple_classifier(x, y) == label)
+accuracy = correct / len(X)
+print(f"Accuracy: {accuracy:.2%}")

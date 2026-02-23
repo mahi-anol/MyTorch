@@ -3,8 +3,32 @@ import math
 from hypothesis import given
 from hypothesis.strategies import floats
 import torch
-
+from MyTorch.operators import *
+from MyTorch.testing import assert_close
 """Unit tests"""
+# Task 0.1 Tests
+@pytest.mark.task0_1
+def test_add():
+    assert add(2, 3) == 5
+    assert add(-1, 1) == 0
+
+@pytest.mark.task0_1  
+def test_mul():
+    assert mul(3, 4) == 12
+    assert mul(-2, 3) == -6
+
+@pytest.mark.task0_1
+def test_sigmoid():
+    assert_close(sigmoid(0), 0.5)
+    assert 0 < sigmoid(-10) < 1
+    assert 0 < sigmoid(10) < 1
+
+@pytest.mark.task0_1
+def test_relu():
+    assert relu(5) == 5
+    assert relu(-3) == 0
+    assert relu(0) == 0
+
 @pytest.mark.task0_1
 def test_operators():
     from MyTorch.operators import (
@@ -130,3 +154,34 @@ def test_other(a):
     if math.isfinite(a):
         result=add(a,neg(a))
         assert_close(result,0.0)
+
+# Task 0.3 Tests
+@pytest.mark.task0_3
+def test_map():
+    negate = map(neg)
+    assert list(negate([1, 2, 3])) == [-1, -2, -3]
+
+@pytest.mark.task0_3
+def test_zipWith():
+    add_lists = zipWith(add)
+    assert list(add_lists([1, 2], [3, 4])) == [4, 6]
+
+@pytest.mark.task0_3
+def test_reduce():
+    sum_fn = reduce(add, 0)
+    assert sum_fn([1, 2, 3, 4]) == 10
+    
+    prod_fn = reduce(mul, 1)
+    assert prod_fn([2, 3, 4]) == 24
+
+@pytest.mark.task0_3
+def test_sum():
+    assert sum([1, 2, 3, 4]) == 10
+    assert sum([]) == 0
+
+@pytest.mark.task0_3
+def test_prod():
+    assert prod([2, 3, 4]) == 24
+    assert prod([]) == 1
+
+# pytest tests/test_operators.py -v -k "task0_3"
