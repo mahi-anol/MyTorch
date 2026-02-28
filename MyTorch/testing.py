@@ -66,3 +66,35 @@ correct = sum(1 for (x, y), label in zip(X, y_true)
               if simple_classifier(x, y) == label)
 accuracy = correct / len(X)
 print(f"Accuracy: {accuracy:.2%}")
+
+
+
+print("Central Difference.....")
+from MyTorch.autodiff import central_difference
+
+def square(x):
+    return x * x
+
+def mul(x, y):
+    return x * y
+
+print(central_difference(square, 3.0))           # Derivative of x² at x=3
+print(central_difference(mul, 3.0, 4.0, arg=0))  # ∂(xy)/∂x at (3,4)
+print(central_difference(mul, 3.0, 4.0, arg=1))  # ∂(xy)/∂y at (3,4)
+
+
+print("Checking epsilon sensitivity....")
+
+import math
+from MyTorch.autodiff import central_difference
+
+def exp_func(x):
+    return math.exp(x)
+
+# True derivative of e^x at x=1 is e^1 ≈ 2.718
+true_derivative = math.e
+
+for eps in [1e-2, 1e-4, 1e-6, 1e-8, 1e-10, 1e-12]:
+    approx = central_difference(exp_func, 1.0, epsilon=eps)
+    error = abs(approx - true_derivative)
+    print(f"epsilon={eps:.0e}: approx={approx:.10f}, error={error:.2e}")

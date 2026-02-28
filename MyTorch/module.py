@@ -70,13 +70,22 @@ class Module:
         self._parameters[name]=param
         return param
     
+    def __getattribute__(self, name):
+        modules=super().__getattribute__("_modules")
+        parameters=super().__getattribute__("_parameters")
+        if name in modules:
+            return modules[name]
+        elif name in parameters:
+            return parameters[name]        
+        return super().__getattribute__(name)
+
     def __setattr__(self, key:str, value:Any):
         """Automatically register modules and parameters."""
         if isinstance(value,Parameter):
             self._parameters[key]=value
         elif isinstance(value,Module):
             self._modules[key]=value
- 
-        super().__setattr__(key,value)
+        else:
+            super().__setattr__(key,value)
 
 
