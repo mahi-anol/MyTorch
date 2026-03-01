@@ -98,3 +98,20 @@ for eps in [1e-2, 1e-4, 1e-6, 1e-8, 1e-10, 1e-12]:
     approx = central_difference(exp_func, 1.0, epsilon=eps)
     error = abs(approx - true_derivative)
     print(f"epsilon={eps:.0e}: approx={approx:.10f}, error={error:.2e}")
+
+
+print("-----scalar testing------")
+
+
+from MyTorch.scalar import Scalar
+
+a = Scalar(2.0, name="a")
+b = Scalar(3.0, name="b")
+
+print(f"a.data = {a.data}")
+print(f"a.is_leaf() = {a.is_leaf()}")
+print(f"a.derivative = {a.derivative}")
+
+a.accumulate_derivative(1.0)
+a.accumulate_derivative(2.0)
+print(f"After accumulating: a.derivative = {a.derivative}")

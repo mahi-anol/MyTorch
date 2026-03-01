@@ -49,6 +49,7 @@ def central_difference(f:Callable[...,float],*vals:float,arg:int=0,epsilon:float
 class Variable:
     """
     A node in the computation graph.
+    Scalar,Tensor inherits from this
     Attributes:
         history:    Record of the operation that created this variable.
         derivative: Accumulated gradient (set during backward pass)
@@ -80,10 +81,10 @@ class History:
 
     Attributes:
         last_fn: The function class that created this variable
-        ctx: Context object storing values needed for backward
+d       ctx: Context object storing values needed for backward
         inputs: The input variable to the operation.
     """
-    last_fn=Optional[type]=None
-    ctx=Optional["Context"]=None
+    last_fn:Optional[type]=None
+    ctx:Optional["Context"]=None
     inputs: Sequence["Variable"]=()
     

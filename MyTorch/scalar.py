@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional,Sequence,Tuple,Type,Union
 
-from MyTorch.autodiff import Variable,History,Context
+from MyTorch.autodiff import Variable,History
 
 @dataclass 
 class ScalarHistory:
@@ -15,7 +15,7 @@ class ScalarHistory:
     """
     last_fn:Optional[Type["ScalarFunction"]]=None
     ctx: Optional[Context]=None
-    inputs=Sequence["Scalar"]=()
+    inputs:Sequence["Scalar"]=()
 
 
 class Scalar(Variable):
@@ -29,19 +29,97 @@ class Scalar(Variable):
     """
 
     def __init__(self,data:float,history:Optional[ScalarHistory]=None,name:Optional[str]=None):
-        super().__int__()
+        super().__init__()
         self.data=data
         self.history=history
         self.name=name
         self.derivative=None
 
+    def __repr__(self)->str:
+        return f"Scalar({self.data})"
+    
+    def __float__(self)->float:
+        return float(self.data)
+    
+    # Comparison operators (for convenience , not differentiable)
+    def __lt__(self,other:Union[Scalar,float])->bool:
+        other_val=other.data if isinstance(other,Scalar) else other
+        return self.data<other_val
+    def __gt__(self,other:Union[Scalar,float])->bool:
+        other_val=other.data if isinstance(other,Scalar) else other
+
+    def __eq__(self,other:object)->bool:
+        if isinstance(other,Scalar):
+            return self.data==other.data
+        
+    # Leaf detection
+    def is_leaf(self)->bool:
+        """Leaf scalars have no computaion history"""
+        return self.history is None or self.history.last_fn is None
+    
+
+    def requires_grad(self, requires_grad:bool=True)->Scalar:
+        """Enable or disable gradient tracking"""
+        if self.requires_grad:
+            if self.history is None:
+                self.history=ScalarHistory()
+        else:
+            self.history=None
+        return self
+    
+    ### accumualate gradients
+    def accumulate_derivative(self,deriv:float):
+        """Add to the accumulate derivative."""
+        if self.derivative is None:
+            self.derivative=0
+        else:
+            self.derivative=self.derivative+deriv
+
     def _zero_grad_(self)->None:
         "Resets gradient to None."
+        self.derivative=None
     
     # Arithmetic operations - delegate to ScalarFunction.
 
     def __add__(self, other:Union[Scalar,float])->Scalar:
         return Add.apply(self,other)
+    
+    def __radd__(self, other:Union[Scalar,float])->Scalar:
+        return Add.apply(other,self)
+    
+    def __mul__(self, other:Union[Scalar,float])->Scalar:
+        return Mul.apply(self,other)
+    
+    def __rmul__(self, other:Union[Scalar,float])->Scalar:
+        return Mul.apply(other,self)
+    
+    def __neg__(self)->Scalar:
+        return Neg.apply(self)
+    
+    def __sub__(self,other:Union[Scalar,float])->Scalar:
+        return Add.apply(self,Neg.apply(other))
+    
+    def __rsub__(self,other:Union[Scalar,float])->Scalar:
+        return Add.apply(Neg.apply(self),other)
+    
+    def __truediv__(self,other:Union[Scalar,float])->Scalar:
+        return Mul.apply(self,Inv.apply(other))
+    
+    def __rtruediv__(self, other:Union[Scalar,float])->Scalar:
+        return Mul.apply(other,Inv.apply(self))
+    
+    def log(self)->Scalar:
+        return Log.apply(self)
+    
+    def exp(self)->Scalar:
+        return Exp.apply(self)
+    
+    def sigmoid(self)->Scalar:
+        return Sigmoid.apply(self)
+    
+    def relu(self)->Scalar:
+        return Relu.apply(self)
+
     
 
 
