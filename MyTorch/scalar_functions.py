@@ -51,10 +51,145 @@ class ScalarFunction:
         # Create result Scalar
         if requires_grad:
             history=ScalarHistory(
-                last_fn=s.history
-                ctx=Context
+                last_fn=cls
+                ctx=ctx
+                input=scalars
             )
         else:
             history=None
 
         return Scalar(result_data,history=history)
+    
+
+    @staticmethod
+    def forward(ctx:Context,*inputs:float)->float:
+        """compute the function output. Override in subclass."""
+        raise NotImplementedError()
+
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float,...]:
+        """
+        Compute gradient with respect to inputs.
+
+        Args:
+            ctx: Context with saved values from forward.
+            d_output: Gradients of loss with respect to output.
+
+        Returns:
+            Tuple of gradients, one per input.
+        """
+        raise NotImplementedError()
+    
+# Function Implementations.
+
+class Add(ScalarFunction):
+    """Addition: z=x+y"""
+
+    @staticmethod
+    def forward(ctx: Context,x:float,y:float)->float:
+        return x+y
+
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float,float]:
+        return d_output,d_output
+    
+
+class Mul(ScalarFunction):
+    """Multiplication: z=x*y"""
+
+    @staticmethod
+    def forward(ctx:Context,x:float,y:float):
+        ctx.save_for_backward(x,y)
+        return x*y
+    
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float,float]:
+        x,y=ctx.saved_values
+        return d_output*y,d_output*x
+    
+
+class Neg(ScalarFunction):
+    """Negation: z=-x"""
+
+    @staticmethod
+    def forward(ctx:Context,x:float)->float:
+        return -x
+    
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float]:
+        return (-d_output,)
+    
+
+class Inv(ScalarFunction):
+    """Inverse: z=1/x"""
+
+    @staticmethod
+    def forward(ctx: Context,x:float)->float:
+        ctx.save_for_backward(x)
+        return 1.0/x
+    
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float]:
+        (x,)=ctx.saved_values
+        return (-d_output/(x*x),)
+    
+
+class Log(ScalarFunction):
+    """Natural log: z=log(x)"""
+    @staticmethod
+    def forward(ctx:Context,x:float)->float:
+        ctx.save_for_backward(x)
+        return math.log(x)
+
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float]:
+        (x,)=ctx.saved_values
+        return (d_output/x,)
+    
+
+class Exp(ScalarFunction):
+    """Exponential: z=e^x"""
+
+    @staticmethod
+    def forward(ctx:Context,x:float)->float:
+        result=math.exp(x)
+        ctx.save_for_backward(result) # saving output not input.
+        return result
+    
+    def backward(ctx: Context,d_output:float)->Tuple[float]:
+        (result,)=ctx.saved_values
+        return (d_output,result,)
+    
+
+class Sigmoid(ScalarFunction):
+    """sigmoid: z=1/(1+e^(-x))"""
+
+    @staticmethod
+    def forward(ctx:Context,x:float)->float:
+        if x>0:
+            result=1.0/(1.0+math.exp(-x))
+        else:
+            exp_x=math.exp(x)
+            result=exp_x/(1.0+exp_x)
+        ctx.save_for_backward(result)
+
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float]:
+        (result,)=ctx.saved_values
+        return (d_output*result*(1.0-result),)
+    
+
+class ReLU(ScalarFunction):
+    """ReLU: z=max(0,z)"""
+
+    @staticmethod
+    def forward(ctx:Context,x:float)->float:
+        ctx.save_for_backward(x)
+        return max(0.0,x)
+    
+    @staticmethod
+    def backward(ctx:Context,d_output:float)->Tuple[float]:
+        (x,)=ctx.saved_values
+        #d(relu)/dx=1 if x>0 else 0
+        return (d_output if x>0 else 0.0,)
+    

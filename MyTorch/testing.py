@@ -115,3 +115,18 @@ print(f"a.derivative = {a.derivative}")
 a.accumulate_derivative(1.0)
 a.accumulate_derivative(2.0)
 print(f"After accumulating: a.derivative = {a.derivative}")
+
+
+## testing scalar
+from MyTorch.scalar import Scalar
+
+a = Scalar(2.0)
+a.requires_grad(True)
+b = Scalar(3.0)
+b.requires_grad(True)
+
+c = a * b  # c = 6.0
+
+print(f"c.data = {c.data}")
+print(f"c.is_leaf() = {c.is_leaf()}")
+print(f"c.history.last_fn = {c.history.last_fn}")
