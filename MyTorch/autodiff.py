@@ -6,7 +6,7 @@ autho diff utility for minitorch.
 from typing import Callable,List,Tuple,Any
 from dataclasses import dataclass
 from typing import Optional,Sequence
-
+from typing import List,Set
 def central_difference(f:Callable[...,float],*vals:float,arg:int=0,epsilon:float=1e-6)->float:
     """
     Compute numerical derivative of f with respect to argument `arg`.
@@ -81,10 +81,17 @@ class History:
 
     Attributes:
         last_fn: The function class that created this variable
-d       ctx: Context object storing values needed for backward
+       ctx: Context object storing values needed for backward
         inputs: The input variable to the operation.
     """
     last_fn:Optional[type]=None
     ctx:Optional["Context"]=None
     inputs: Sequence["Variable"]=()
+    
+
+def topological_sort(variable:Variable)->List[Variable]:
+
+    """
+    Return variables in topological order (children before parents).
+    """
     

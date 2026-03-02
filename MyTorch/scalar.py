@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Optional,Sequence,Tuple,Type,Union
 
 from MyTorch.autodiff import Variable,History
-
+from scalar_functions import *
 @dataclass 
 class ScalarHistory:
     """
@@ -118,7 +118,7 @@ class Scalar(Variable):
         return Sigmoid.apply(self)
     
     def relu(self)->Scalar:
-        return Relu.apply(self)
+        return ReLU.apply(self)
 
     
 
