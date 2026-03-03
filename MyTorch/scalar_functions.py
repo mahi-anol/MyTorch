@@ -172,6 +172,7 @@ class Sigmoid(ScalarFunction):
             exp_x=math.exp(x)
             result=exp_x/(1.0+exp_x)
         ctx.save_for_backward(result)
+        return result
 
     @staticmethod
     def backward(ctx:Context,d_output:float)->Tuple[float]:

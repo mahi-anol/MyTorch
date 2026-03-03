@@ -77,7 +77,7 @@ class Scalar(Variable):
         else:
             self.derivative=self.derivative+deriv
 
-    def _zero_grad_(self)->None:
+    def zero_grad_(self)->None:
         "Resets gradient to None."
         self.derivative=None
 
