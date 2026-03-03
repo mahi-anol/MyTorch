@@ -5,11 +5,12 @@ Scalar class for auto differentiation on sigle values.
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional,Sequence,Tuple,Type,Union
+from MyTorch.autodiff import Variable,History,backpropagate
+from MyTorch.scalar_functions import *
 
-from MyTorch.autodiff import Variable,History
-from scalar_functions import *
+
 @dataclass 
-class ScalarHistory:
+class ScalarHistory(History):
     """
     Records the operation that created a scalar.
     """
@@ -51,16 +52,17 @@ class Scalar(Variable):
     def __eq__(self,other:object)->bool:
         if isinstance(other,Scalar):
             return self.data==other.data
-        
+
     # Leaf detection
+    @property
     def is_leaf(self)->bool:
         """Leaf scalars have no computaion history"""
         return self.history is None or self.history.last_fn is None
     
 
-    def requires_grad(self, requires_grad:bool=True)->Scalar:
+    def requires_grad_(self, requires_grad:bool=True)->Scalar:
         """Enable or disable gradient tracking"""
-        if self.requires_grad:
+        if requires_grad:
             if self.history is None:
                 self.history=ScalarHistory()
         else:
@@ -71,13 +73,22 @@ class Scalar(Variable):
     def accumulate_derivative(self,deriv:float):
         """Add to the accumulate derivative."""
         if self.derivative is None:
-            self.derivative=0
+            self.derivative=deriv
         else:
             self.derivative=self.derivative+deriv
 
     def _zero_grad_(self)->None:
         "Resets gradient to None."
         self.derivative=None
+
+
+    def backward(self,deriv:float=1.0)->None:
+        """
+        Compute gradients for all variables in the computation graph.
+        Args:
+            deriv:  Gradient of this scalar (default 1.0)
+        """
+        backpropagate(self,deriv)
     
     # Arithmetic operations - delegate to ScalarFunction.
 

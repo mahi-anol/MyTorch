@@ -7,6 +7,12 @@ from typing import Callable,List,Tuple,Any
 from dataclasses import dataclass
 from typing import Optional,Sequence
 from typing import List,Set
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from MyTorch.scalar import Context
+
+
 def central_difference(f:Callable[...,float],*vals:float,arg:int=0,epsilon:float=1e-6)->float:
     """
     Compute numerical derivative of f with respect to argument `arg`.
@@ -44,7 +50,6 @@ def central_difference(f:Callable[...,float],*vals:float,arg:int=0,epsilon:float
 
     return (f_plus-f_minus)/(2*epsilon)
 
-
 @dataclass
 class Variable:
     """
@@ -55,19 +60,21 @@ class Variable:
         derivative: Accumulated gradient (set during backward pass)
         name:   Optional name for debugging.
     """
-    history: Optional["History"]=None
-    derivative:Optional[float]=None
-    name: Optional[str]=None
-
+    history: Optional["History"]=None # last_fn,ctx,inputs
+    derivative:Optional[float]=None # store derivative during backprop
+    name: Optional[str]=None # Storing name for debugging,
+    
+    @property
     def is_leaf(self)->bool:
         """A leaf variable has no history (was not created by an operation)."""
         return self.history is None
     
+    @property
     def is_constant(self)->bool:
         """A constant has no history and will not receive gradients."""
         return self.history is None
     
-    def requires_grad(self,requires_grad:bool=True)->"Variable":
+    def requires_grad_(self,requires_grad:bool=True)->"Variable":
         if requires_grad:
             self.history=History()
         else:
@@ -84,14 +91,88 @@ class History:
        ctx: Context object storing values needed for backward
         inputs: The input variable to the operation.
     """
-    last_fn:Optional[type]=None
-    ctx:Optional["Context"]=None
-    inputs: Sequence["Variable"]=()
+    last_fn:Optional[type]=None # What function was used.
+    ctx:Optional["Context"]=None   # variables that we will need during computing backprop
+    inputs: Sequence["Variable"]=() # which inputs was used
     
-
 def topological_sort(variable:Variable)->List[Variable]:
 
     """
     Return variables in topological order (children before parents).
+    For backpropagration, we need to process a  variable after all,
+    varaible that depend on it have been processed.
     """
+
+    order: List[Variable]=[]
+    visited:Set[int]=set()
+
+    def visit(var:Variable)->None:
+        var_id=id(var)
+
+        if var_id in visited:
+            return
+
+        visited.add(var_id)
+
+        # Visit children first (variables this one depends on)
+        if var.history is not None and var.history.inputs:
+            for input_var in var.history.inputs:
+                visit(input_var)
+
+        order.append(var)
+    # Starting dfs+topological sort.
+    visit(variable)
+
+    return order
+
+
+def backpropagate(variable:Variable,deriv:float=1.0)->None:
+    """
+    Run backpropagration start from variables
+    Computes gradients for all leaf variables in the computation graph.
+
+    Args: 
+        variables: Output variable to differntiate (e.g., loss)
+        deriv: Graident of variable (default 1.0 for scalar loss)
+    """
+
+    # Get variables in topological order.
+    sorted_vars=topological_sort(variable)
+
+    # Process in Reverse topological order
+    sorted_vars=list(reversed(sorted_vars))
+
+    #Initialize gradient of output
+    variable.derivative=deriv
+    
+    for var in sorted_vars:
+        if var.is_leaf:
+            # leaf variables just acculomate gradients,
+            #  nothing to propagate.
+            continue
+        if var.derivative is None:
+            # No gradient reached this node (disconnected).
+            continue
+
+        history:"History"=var.history
+        if history is None or history.last_fn is None:
+            continue
+
+        # Call backward to get gradient for the inputs.
+        backward_fn=history.last_fn.backward
+        ctx=history.ctx
+        input_grads=backward_fn(ctx,var.derivative)
+
+        #  Acculomate gradients to input variables.
+        for input_var,grad in zip(history.inputs,input_grads):
+            if grad is not None:
+                input_var.accumulate_derivative(grad)
+
+
+
+
+
+
+
+
     

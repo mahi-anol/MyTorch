@@ -5,6 +5,7 @@ Scalar functions with forward and backward methods.
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple,Union
 
+
 if TYPE_CHECKING:
     from MyTorch.scalar import Scalar,Context
 
@@ -52,7 +53,7 @@ class ScalarFunction:
             history=ScalarHistory(
                 last_fn=cls,
                 ctx=ctx,
-                inputs=scalars,
+                inputs=scalars
             )
         else:
             history=None
@@ -190,14 +191,14 @@ class ReLU(ScalarFunction):
     def backward(ctx:Context,d_output:float)->Tuple[float]:
         (x,)=ctx.saved_values
         #d(relu)/dx=1 if x>0 else 0
-        return (d_output if x>0 else 0.0,)
+        return (d_output if x>0 else 0.0)
     
-
 class Square(ScalarFunction):
     """Square: z = x^2"""
 
     @staticmethod
     def forward(ctx: Context, x: float) -> float:
+        # What should you save?
         ctx.save_for_backward(x)
         return x*x
 

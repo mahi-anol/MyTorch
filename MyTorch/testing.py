@@ -109,7 +109,7 @@ a = Scalar(2.0, name="a")
 b = Scalar(3.0, name="b")
 
 print(f"a.data = {a.data}")
-print(f"a.is_leaf() = {a.is_leaf()}")
+print(f"a.is_leaf() = {a.is_leaf}")
 print(f"a.derivative = {a.derivative}")
 
 a.accumulate_derivative(1.0)
@@ -121,12 +121,93 @@ print(f"After accumulating: a.derivative = {a.derivative}")
 from MyTorch.scalar import Scalar
 
 a = Scalar(2.0)
-a.requires_grad(True)
+a.requires_grad_(True)
 b = Scalar(3.0)
-b.requires_grad(True)
+b.requires_grad_(True)
 
 c = a * b  # c = 6.0
 
 print(f"c.data = {c.data}")
-print(f"c.is_leaf() = {c.is_leaf()}")
+print(f"c.is_leaf() = {c.is_leaf}")
 print(f"c.history.last_fn = {c.history.last_fn}")
+
+
+print("---Test scalar.backward()")
+
+from MyTorch.scalar import Scalar
+
+a=Scalar(2.0)
+a.requires_grad_(True)
+b=Scalar(3.0)
+b.requires_grad_(True)
+
+c=a*b
+d=c+a
+d.backward()
+
+print(f"a.derivative = {a.derivative}")
+print(f"b.derivative = {b.derivative}")
+
+
+from MyTorch.scalar import Scalar
+from MyTorch.autodiff import central_difference
+
+def test_function(x_val, y_val):
+    x = Scalar(x_val)
+    x.requires_grad_(True)
+    y = Scalar(y_val)
+    y.requires_grad_(True)
+
+    # Compute: z = (x * y) + x.log()
+    z = x * y + x.log()
+    z.backward()
+
+    # Compare with numerical derivatives
+    def f_for_x(x_val):
+        return x_val * y_val + math.log(x_val)
+    def f_for_y(y_val):
+        return x_val * y_val + math.log(x_val)
+
+    numerical_dx = central_difference(f_for_x, x_val)
+    numerical_dy = central_difference(f_for_y, y_val)
+
+    print(f"Autodiff: dx={x.derivative:.6f}, dy={y.derivative:.6f}")
+    print(f"Numerical: dx={numerical_dx:.6f}, dy={numerical_dy:.6f}")
+
+import math
+test_function(2.0, 3.0)
+
+print("----Broken Backprop----")
+
+
+from MyTorch.autodiff import topological_sort
+# DELIBERATELY BROKEN - processes in wrong order
+def broken_backpropagate(variable, deriv=1.0):
+    """Process nodes in forward order instead of reverse."""
+    sorted_vars = topological_sort(variable)
+    # BUG: Not reversing! Processing inputs before outputs
+
+    variable.derivative = deriv
+
+    for var in sorted_vars:  # Wrong order!
+        if var.is_leaf or var.derivative is None:
+            continue
+
+        history = var.history
+        if history is None or history.last_fn is None:
+            continue
+
+        backward_fn = history.last_fn.backward
+        input_grads = backward_fn(history.ctx, var.derivative)
+
+        for input_var, grad in zip(history.inputs, input_grads):
+            if grad is not None:
+                input_var.accumulate_derivative(grad)
+a = Scalar(2.0); a.requires_grad_(True)
+b = Scalar(3.0); b.requires_grad_(True)
+c = a * b
+d = c + a
+broken_backpropagate(d, 1.0)
+
+print(a.derivative)
+print(b.derivative)
