@@ -211,3 +211,24 @@ broken_backpropagate(d, 1.0)
 
 print(a.derivative)
 print(b.derivative)
+
+
+### Broadcast test
+from MyTorch.tensor_data import shape_broadcast, broadcast_index
+import numpy as np
+
+# Experiment 1: Shape computation
+print(shape_broadcast((3, 1), (1, 4)))  # Expected: (3, 4)
+print(shape_broadcast((2, 3, 4), (4,))) # Expected: (2, 3, 4)
+
+# Experiment 2: Try invalid broadcast
+try:
+    shape_broadcast((3, 2), (4, 2))
+except Exception as e:
+    print(f"Error: {e}")  # Expected: IndexingError
+
+# Experiment 3: Index mapping
+big_index = np.array([1, 2, 3])
+out_index = np.array([0, 0])
+broadcast_index(big_index, np.array([2, 3, 4]), np.array([1, 4]), out_index)
+print(f"Mapped index: {out_index}")  # Expected: [0, 3]

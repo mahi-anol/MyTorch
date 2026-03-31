@@ -165,11 +165,9 @@ def shape_broadcast(shape1: UserShape,shape2:UserShape)->UserShape:
         elif d2==1:
             result.append(d1)
         else:
-            raise IndexingError(f"Cannot broadcasr shapes {shape1} and {shape2}")
+            raise IndexingError(f"Cannot broadcast shapes {shape1} and {shape2}")
     
     return tuple(reversed(result))
-
-
 
 def broadcast_index(
     big_index: Index,
